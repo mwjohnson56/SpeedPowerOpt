@@ -41,9 +41,9 @@ class SPM_MotorArchitect(me.Architect):
         d_m=x[2]
         d_ag=x[3]
         l_tooth=x[4]
-        l_yoke=x[5]
+        d_yoke=x[5]
         k_tooth=x[6]
-        machine=self.MotorClass(r_sh,r_ro,d_m,d_ag,l_tooth,l_yoke,k_tooth,
+        machine=self.MotorClass(r_sh,r_ro,d_m,d_ag,l_tooth,d_yoke,k_tooth,
                  self.shaft_mat,self.magnet_mat,self.core_mat,
                  self.coil_mat,self.sleeve_mat)
         return machine
@@ -63,7 +63,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
         TODO
     """
     
-    def __init__(self,r_sh,r_ro,d_m,d_ag,l_tooth,l_yoke,k_tooth,
+    def __init__(self,r_sh,r_ro,d_m,d_ag,l_tooth,d_yoke,k_tooth,
                  shaft_mat,magnet_mat,core_mat,coil_mat,sleeve_mat):
         """Creates a machine object.
 
@@ -77,7 +77,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
         self._d_m=d_m
         self._d_ag=d_ag
         self._l_tooth=l_tooth
-        self._l_yoke= l_yoke
+        self._d_yoke= l_yoke
         self._k_tooth=k_tooth
         self._shaft_mat=shaft_mat
         self._magent_mat=magnet_mat
@@ -110,8 +110,8 @@ class Q6p1y1_SMP_Motor(me.Machine):
     def l_tooth(self):
         return self._l_tooth
     @property
-    def l_yoke(self):
-        return self._l_yoke
+    def d_yoke(self):
+        return self._d_yoke
     @property
     def k_tooth(self):
         return self._k_tooth
@@ -169,7 +169,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
         return self.r_si+self.l_tooth
     @property
     def r_so(self):
-        return self.r_sy+self.l_yoke
+        return self.r_sy+self.d_yoke
     @property
     def w_st(self):
         return self.k_tooth*self.r_si*self.alpha_q
