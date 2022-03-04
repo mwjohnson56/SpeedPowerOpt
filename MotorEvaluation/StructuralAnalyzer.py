@@ -75,7 +75,7 @@ class StructuralAnalyzer(me.Analyzer):
         C1=E/(1-v**2)
         C2=E*v/(1-v**2)
         C3=C1
-        P_sl=problem.P_sl
+        P_sl=-66E6
         D_1=C1+C2
         D_2=C2-C1
         D_3=3*C1+C2

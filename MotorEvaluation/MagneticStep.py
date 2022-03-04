@@ -115,6 +115,7 @@ class MagAnalyzer(me.Analyzer):
             phi= B_yoke*w_st*l_st
             B_tooth=phi/(w_st*l_st)
         B_delta=phi/(w_st*l_st)
+        B_delta=d_m*B_r/(mu_m*mu_0*d_ag+d_m)
         results=[B_delta,B_tooth,B_yoke]
         return results
     

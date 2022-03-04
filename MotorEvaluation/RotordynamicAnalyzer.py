@@ -28,7 +28,7 @@ class RDProblemDefinition(me.ProblemDefinition):
         r_ro=state.design.machine.r_ro
         alpha_r=state.design.machine.r_sh/r_ro
         alpha_l=2
-        v_tip=state.conditions.v_tip_max
+        v_tip=state.conditions.v_tip_max[0]
         problem=RDProblem(r_ro,alpha_r,C_sh,alpha_l,v_tip)
         return problem
 
@@ -72,7 +72,7 @@ class RDAnalyzer(me.Analyzer):
         v_tip=problem.v_tip
         k_w=1.1
         l_st=r_ro*np.sqrt((alpha_r*4.71**2*C_sh)/(2*alpha_l**2*k_w*v_tip))
-        results = [l_st]
+        results = l_st
         return results
     
 

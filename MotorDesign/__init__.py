@@ -36,13 +36,14 @@ class SPM_MotorArchitect(me.Architect):
             machine (me.Machine): Machine object
         """
         
-        r_sh=x[0]
-        r_ro=x[1]
-        d_m=x[2]
-        d_ag=x[3]
-        l_tooth=x[4]
-        d_yoke=x[5]
-        k_tooth=x[6]
+        
+        r_ro=x[0]
+        d_m=x[1]*r_ro
+        r_sh=r_ro-d_m
+        d_ag=x[2]
+        l_tooth=x[3]
+        d_yoke=x[4]
+        k_tooth=x[5]
         machine=self.MotorClass(r_sh,r_ro,d_m,d_ag,l_tooth,d_yoke,k_tooth,
                  self.shaft_mat,self.magnet_mat,self.core_mat,
                  self.coil_mat,self.sleeve_mat)
@@ -80,7 +81,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
         self._d_yoke= d_yoke
         self._k_tooth=k_tooth
         self._shaft_mat=shaft_mat
-        self._magent_mat=magnet_mat
+        self._magnet_mat=magnet_mat
         self._core_mat=core_mat
         self._coil_mat=coil_mat
         self._sleeve_mat=sleeve_mat
@@ -190,8 +191,9 @@ class MagnetMaterial:
     E=160E9
     v=.24
     alpha=5E-6
-    B_R=1.7
-    mu_r=1
+    B_r=1.7
+    mu_m=1
+    sigma_t_max=80E6
 class ShaftMaterial:
     rho=7450
     E=160E9
