@@ -13,7 +13,7 @@ from eMach import mach_eval as me
 from typing import List,Tuple,Any
 from copy import deepcopy
 
-__all__ = ['SPM_MotorArchitect','SPM_SettingsHanlder','Q6p1y1_SMP_Motor']
+__all__ = ['SPM_Designer',]
 
 
 class SPM_MotorArchitect(me.Architect):
@@ -48,11 +48,11 @@ class SPM_MotorArchitect(me.Architect):
                  self.coil_mat,self.sleeve_mat)
         return machine
     
-class SPM_SettingsHanlder(me.SettingsHandler):
+class SPM_SettingsHandler():
     """Settings hanlder for design creation"""
     def __init__(self,cooling):
         self.cooling=cooling
-    def getSettings(self,x):
+    def get_settings(self,x):
         settings = self.cooling
         return settings
     
@@ -77,7 +77,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
         self._d_m=d_m
         self._d_ag=d_ag
         self._l_tooth=l_tooth
-        self._d_yoke= l_yoke
+        self._d_yoke= d_yoke
         self._k_tooth=k_tooth
         self._shaft_mat=shaft_mat
         self._magent_mat=magnet_mat
@@ -185,4 +185,22 @@ class Q6p1y1_SMP_Motor(me.Machine):
         #TODO
         pass
 
+class MagnetMaterial:
+    rho=7450
+    E=160E9
+    v=.24
+    alpha=5E-6
+    B_R=1.7
+    mu_r=1
+class ShaftMaterial:
+    rho=7450
+    E=160E9
+    v=.24
+    alpha=5E-6   
+class CoreMaterial:
+    mu_core=4000
     
+    
+arch=SPM_MotorArchitect(ShaftMaterial, MagnetMaterial, CoreMaterial, None, None, Q6p1y1_SMP_Motor)
+settings_handler=SPM_SettingsHandler(None)
+SPM_Designer=me.MachineDesigner(arch,settings_handler)

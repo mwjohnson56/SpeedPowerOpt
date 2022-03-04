@@ -13,7 +13,7 @@ from eMach import mach_eval as me
 from typing import List,Tuple,Any
 from copy import deepcopy
 
- __all__=[StructuralStep,]
+__all__=['StructuralStep',]
  
 class StructuralProblemDefinition(me.ProblemDefinition):
     """Class converts input state into a problem"""
@@ -27,7 +27,7 @@ class StructuralProblemDefinition(me.ProblemDefinition):
         v=magnet_mat.v
         alpha=magnet_mat.alpha
         sigma_t_max=magnet_mat.sigma_t_max
-        r_m=state.design.machine.r_m
+        r_m=state.design.machine.r_m/state.design.machine.r_ro
         DT=10
         problem=StructuralProblem(rho,E,v,alpha,sigma_t_max,r_m,DT)
         return problem
