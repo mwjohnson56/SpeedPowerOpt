@@ -92,7 +92,7 @@ class StructuralAnalyzer(me.Analyzer):
         v_tip_max_1=np.sqrt((sigma_r_max-P_sl)/(D_3*PSI*(r_m**2-1)))
         v_tip_max_2=np.sqrt((sigma_t_max-(D_4/D_1)*P_sl-(zeta_t-(D_4/D_1)*zeta_r)*DT)/(PSI*(D_6*r_m**2-(D_3*D_4)/D_1)))
         v_tip_max=np.minimum(v_tip_max_1,v_tip_max_2)
-        results = [v_tip_max]
+        results = v_tip_max
         return results
     
 

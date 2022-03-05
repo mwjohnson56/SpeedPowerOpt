@@ -28,7 +28,7 @@ class RDProblemDefinition(me.ProblemDefinition):
         r_ro=state.design.machine.r_ro
         alpha_r=state.design.machine.r_sh/r_ro
         alpha_l=2
-        v_tip=state.conditions.v_tip_max[0]
+        v_tip=state.conditions.v_tip_max
         problem=RDProblem(r_ro,alpha_r,C_sh,alpha_l,v_tip)
         return problem
 
