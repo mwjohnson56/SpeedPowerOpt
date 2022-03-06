@@ -75,7 +75,8 @@ class DesignSpace():
         l_st=last_state.design.machine.l_st
         v_tip=last_state.conditions.v_tip_max
         B_delta=last_state.conditions.B_delta
-        A_hat=100
+        J=last_state.conditions.J
+        A_hat=last_state.design.machine.A_hat(J)
         Omega=v_tip/r_ro
         V_r=np.pi*r_ro**2*l_st
         Torque=V_r*B_delta*A_hat
@@ -90,8 +91,8 @@ class DesignSpace():
         # l_tooth=x[4]
         # d_yoke=x[5]
         # k_tooth=x[6]
-        bounds=((.001,0,.002,.01,.01,.01),
-                (.025,1,.01,1,1,1))
+        bounds=((.01,0,.002,.01,.01,.01),
+                (.25,1,.01,1,1,1))
         return bounds
 #%%
 
@@ -103,7 +104,8 @@ if __name__ == '__main__':
     #Create evaluation steps
     evalSteps=[steps.StructuralStep,
                steps.RDStep,
-               steps.MagStep]#TODO define steps
+               steps.MagStep,
+               steps.ThermalStep]#TODO define steps
     #Create Evaluator
     evaluator=me.MachineEvaluator(evalSteps)
     design_space=DesignSpace()
@@ -123,12 +125,13 @@ if __name__ == '__main__':
     
     #Run Optimization
     opt=mo.DesignOptimizationMOEAD(machDesProb)
-    pop_size=300
+    pop_size=500
     pop=opt.initial_pop(pop_size)
-    pop=opt.run_optimization(pop,40)
+    pop=opt.run_optimization(pop,4)
     archive=list(dh.load_from_archive())[-pop_size:]
     design_list=[None,]*pop_size
     full_results_list=[None,]*pop_size
+    final_state_list=[None,]*pop_size
     objs_list=[None,]*pop_size
     x_list=[None,]*pop_size
     for ind,data in enumerate(archive):
@@ -154,10 +157,13 @@ if __name__ == '__main__':
     fig,axs =plt.subplots(4,1)
     axs[0].scatter(-objs_list[ndf[0],0]*60/(2*np.pi),x_list[ndf[0],0])
     axs[0].set_xticks([])
+    axs[0].set_xscale('log')
     axs[1].scatter(-objs_list[ndf[0],0]*60/(2*np.pi),x_list[ndf[0],1])
     axs[1].set_xticks([])
+    axs[1].set_xscale('log')
     axs[2].scatter(-objs_list[ndf[0],0]*60/(2*np.pi),full_results_list[ndf[0],0,1])
     axs[2].set_xticks([])
+    axs[2].set_xscale('log')
     axs[3].scatter(-objs_list[ndf[0],0]*60/(2*np.pi),B_delta_list)
-
+    axs[3].set_xscale('log')
 

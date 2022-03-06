@@ -99,23 +99,24 @@ class MagAnalyzer(me.Analyzer):
         d_yoke=problem.d_yoke
         F=B_r*d_m/(mu_m*mu_0)
         R_mag=d_m/(mu_0*mu_m*A_m)
-        R_ag=d_ag/(mu_0*w_st*l_st)
+        R_ag=d_ag/(mu_0*A_m)
         R_tooth=l_tooth/(mu_0*mu_core*w_st*l_st)
         R_yoke=(l_yoke/2)/(mu_0*mu_core*d_yoke*l_st)
-        R_total=R_mag+R_ag+R_tooth+R_yoke
+        slots_per_pole=3
+        R_total=R_mag+R_ag+R_tooth/slots_per_pole+R_yoke
         phi=F/R_total
         
-        B_tooth=phi/(w_st*l_st)
+        B_tooth=phi/(slots_per_pole*w_st*l_st)
         if B_tooth > 1.6:
             B_tooth=1.6
-            phi= B_tooth*w_st*l_st
+            phi= B_tooth*slots_per_pole*w_st*l_st
         B_yoke=phi/(d_yoke*l_st)
         if B_yoke > 1.6:
             B_yoke=1.6
             phi= B_yoke*w_st*l_st
             B_tooth=phi/(w_st*l_st)
-        B_delta=phi/(w_st*l_st)
-        B_delta=d_m*B_r/(mu_m*d_ag+d_m)
+        B_delta=phi/(A_m)
+        #B_delta=d_m*B_r/(mu_m*d_ag+d_m)
         results=[B_delta,B_tooth,B_yoke]
         return results
     

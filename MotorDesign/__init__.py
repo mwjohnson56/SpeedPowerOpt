@@ -18,12 +18,14 @@ __all__ = ['SPM_Designer',]
 
 class SPM_MotorArchitect(me.Architect):
     """Class converts input tuple x into a machine object"""   
-    def __init__(self,shaft_mat,magnet_mat,core_mat,coil_mat,sleeve_mat,MotorClass):
+    def __init__(self,shaft_mat,magnet_mat,core_mat,
+                 coil_mat,sleeve_mat,ins_mat,MotorClass):
         self.shaft_mat=shaft_mat
         self.magnet_mat=magnet_mat
         self.core_mat=core_mat
         self.coil_mat=coil_mat
         self.sleeve_mat=sleeve_mat
+        self.ins_mat=ins_mat
         self.MotorClass=MotorClass
     def create_new_design(self,x:tuple)->"me.Machine":
         """
@@ -46,7 +48,7 @@ class SPM_MotorArchitect(me.Architect):
         k_tooth=x[5]
         machine=self.MotorClass(r_sh,r_ro,d_m,d_ag,l_tooth,d_yoke,k_tooth,
                  self.shaft_mat,self.magnet_mat,self.core_mat,
-                 self.coil_mat,self.sleeve_mat)
+                 self.coil_mat,self.sleeve_mat,self.ins_mat)
         return machine
     
 class SPM_SettingsHandler():
@@ -65,7 +67,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
     """
     
     def __init__(self,r_sh,r_ro,d_m,d_ag,l_tooth,d_yoke,k_tooth,
-                 shaft_mat,magnet_mat,core_mat,coil_mat,sleeve_mat):
+                 shaft_mat,magnet_mat,core_mat,coil_mat,sleeve_mat,ins_mat):
         """Creates a machine object.
 
         Args:
@@ -85,7 +87,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
         self._core_mat=core_mat
         self._coil_mat=coil_mat
         self._sleeve_mat=sleeve_mat
-        
+        self.ins_mat=ins_mat
         self._d_sl=self.d_ag/2
         self._l_st=1
         self.verify_design()
@@ -152,11 +154,17 @@ class Q6p1y1_SMP_Motor(me.Machine):
     def Q(self):
         return 6
     @property
+    def y(self):
+        return 1
+    @property
     def p(self):
         return 1
     @property
     def alpha_q(self):
         return 3.1415/self.Q
+    @property
+    def w_ins(self):
+        return .0005
     
     #Calculated Properties
     @property
@@ -174,7 +182,26 @@ class Q6p1y1_SMP_Motor(me.Machine):
     @property
     def w_st(self):
         return self.k_tooth*self.r_si*self.alpha_q
-        
+    @property
+    def k_w(self):
+        alpha=np.pi*((self.Q-2*self.y)/(self.Q*self.p))
+        n=self.Q/(2*self.p)
+        m=self.Q/(6*self.p)
+        Beta=np.pi/n
+        k_w=np.cos(alpha/2)*(np.sin(m*Beta/2))/(m*np.sin(Beta/2))
+        self._k_w=k_w
+        return self._k_w
+    @property
+    def A_slot(self):
+        # return np.pi*(self.r_sy**2-self.r_si**2)/self.Q - \
+        #     self.w_st*(self.r_sy-self.r_si)
+        A_slot=((1-self.k_tooth)*self.alpha_q/2)*(self.r_sy**2-self.r_si**2)+\
+            (self.r_sy**2-self.r_si**2)*np.tan(self.k_tooth*self.alpha_q/2)
+        return A_slot
+    def A_hat(self,J):
+        A_hat=3*self.A_slot*J*(self.Q/3)*self.k_w*self.coil_mat.k_fill/(np.pi*self.r_si)
+        self._A_hat=A_hat
+        return A_hat
     def check_required_properties(self):
         """Checks for required input properties"""
         #TODO 
@@ -201,8 +228,20 @@ class ShaftMaterial:
     alpha=5E-6   
 class CoreMaterial:
     mu_core=4000
+    k=40
+    k_stien=.001
+    a=1.5
+    b=2
+class CoilMaterial:
+    T_coil=150
+    k_ov=2
+    sigma_coil=5.80E7
+    k_fill=.38
+class InsMaterial:
+    k=1
     
-    
-arch=SPM_MotorArchitect(ShaftMaterial, MagnetMaterial, CoreMaterial, None, None, Q6p1y1_SMP_Motor)
-settings_handler=SPM_SettingsHandler(None)
+class AirCooled:
+    h=100
+arch=SPM_MotorArchitect(ShaftMaterial, MagnetMaterial, CoreMaterial, CoilMaterial, None,InsMaterial, Q6p1y1_SMP_Motor)
+settings_handler=SPM_SettingsHandler(AirCooled)
 SPM_Designer=me.MachineDesigner(arch,settings_handler)
