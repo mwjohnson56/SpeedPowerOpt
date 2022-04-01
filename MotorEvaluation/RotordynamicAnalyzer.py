@@ -12,6 +12,8 @@ from eMach import mach_opt as mo
 from eMach import mach_eval as me
 from typing import List,Tuple,Any
 from copy import deepcopy
+from eMach import mach_opt as mo
+from eMach import mach_eval as me
 
 __all__=['RDStep',]
 
@@ -22,14 +24,14 @@ class RDProblemDefinition(me.ProblemDefinition):
         """Returns Problem from Input State"""
         #TODO define problem definition
         shaft_mat=state.design.machine.shaft_mat
-        rho=shaft_mat.rho
-        E=shaft_mat.E
+        rho=shaft_mat['shaft_material_density']
+        E=shaft_mat['shaft_youngs_modulus']
         C_sh=np.sqrt(E/rho)
-        r_ro=state.design.machine.r_ro
-        alpha_r=state.design.machine.r_sh/r_ro
+        r_sh=state.design.machine.r_sh
+        l_st=state.design.machine.l_st
+        Omega=state.design.settings.Omega
         alpha_l=2
-        v_tip=state.conditions.v_tip_max
-        problem=RDProblem(r_ro,alpha_r,C_sh,alpha_l,v_tip)
+        problem=RDProblem(r_sh,C_sh,l_st,Omega,alpha_l)
         return problem
 
 class RDProblem():
@@ -38,18 +40,18 @@ class RDProblem():
     Attributes:
         TODO
     """
-    def __init__(self,r_ro,alpha_r,C_sh,alpha_l,v_tip):
+    def __init__(self,r_sh,C_sh,l_st,Omega,alpha_l):
         """Creates problem class
         
         Args:
             TODO
             
         """
-        self.r_ro=r_ro
-        self.alpha_r=alpha_r
+        self.r_sh=r_sh
         self.C_sh = C_sh
+        self.l_st=l_st
+        self.Omega=Omega
         self.alpha_l=alpha_l
-        self.v_tip=v_tip
     
 class RDAnalyzer(me.Analyzer):
     """"Class Analyzes the CubiodProblem  for volume and Surface Areas"""
@@ -65,15 +67,16 @@ class RDAnalyzer(me.Analyzer):
                 Results of Analysis
 
         """
-        r_ro=problem.r_ro
-        alpha_r=problem.alpha_r
+        r_sh=problem.r_sh
         C_sh = problem.C_sh
         alpha_l=problem.alpha_l
-        v_tip=problem.v_tip
-        k_w=1.1
-        l_st=r_ro*np.sqrt((alpha_r*4.71**2*C_sh)/(2*alpha_l**2*k_w*v_tip))
-        results = l_st
-        return results
+        l_st=problem.l_st
+
+        omega_n=(4.7**2)*(r_sh/(alpha_l*l_st))*C_sh
+        if 1.2*problem.Omega>omega_n:
+            raise mo.InvalidDesign(message='Critical Speed')
+        else:
+            return True
     
 
 
@@ -81,7 +84,7 @@ class RDPostAnalyzer(me.PostAnalyzer):
     """Converts input state into output state for TemplateAnalyzer"""
     def get_next_state(self,results:Any,stateIn:'me.State')->'me.State':
         stateOut=deepcopy(stateIn)
-        stateOut.design.machine.l_st=results
+        stateOut.design.machine.l_s_valid=results
         return stateOut
     
 

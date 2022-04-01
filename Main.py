@@ -45,7 +45,8 @@ class DataHandler(mo.DataHandler):
 
     def save_designer(self, designer):
         with open(self.designer_filepath, "wb") as des:
-            pickle.dump(designer, des, -1)
+            #pickle.dump(designer, des, -1)
+            pass
 # class DataHandler:
 #     """Parent class for all data handlers"""
 #     def __init__(self):
@@ -72,39 +73,48 @@ class DesignSpace():
         last_results=full_results[-1]
         last_state=last_results[-1]
         r_ro=last_state.design.machine.r_ro
+        r_so=last_state.design.machine.r_so
         l_st=last_state.design.machine.l_st
-        v_tip=last_state.conditions.v_tip_max
-        B_delta=last_state.conditions.B_delta
+        v_tip=last_state.design.settings.Omega*r_ro
+        B_delta=last_state.design.machine.B_delta
         J=last_state.conditions.J
         A_hat=last_state.design.machine.A_hat(J)
-        Omega=v_tip/r_ro
         V_r=np.pi*r_ro**2*l_st
+        V_s=np.pi*r_so**2*l_st
         Torque=V_r*B_delta*A_hat
         Power=Omega*Torque
-        return (-Omega,-Power)
+        Power_density=Power/V_s
+        #print(Power)
+        return (-Power,-Power_density)
     
     @property
     def bounds(self) -> tuple:
-        # r_ro=x[1]
-        # d_m=x[2]
-        # d_ag=x[3]
-        # l_tooth=x[4]
-        # d_yoke=x[5]
-        # k_tooth=x[6]
-        bounds=((.01,0,.002,.01,.01,.01),
-                (.25,1,.01,1,1,1))
+        # r_ro=x[0]
+        # d_m_norm=x[1]
+        # L/r=x[2]
+        # B_sy_nrom=x[3]
+        # B_th_norm=x[4]
+        # l_tooth_norm=x[5]
+        bounds=((.01,0, 0, .1,1,0),
+                (.25,1,10,1.5,1.1,5))
         return bounds
 #%%
 
+
+#
 if __name__ == '__main__':
-    
+    #Settings
+    h=200
+    Omega=10000
     #Create Designer
-    des=MotorDesign.SPM_Designer
+    arch=MotorDesign.arch
+    settings_handler=MotorDesign.SPM_SettingsHandler(h,Omega)
+    des=me.MachineDesigner(arch,settings_handler)
 
     #Create evaluation steps
-    evalSteps=[steps.StructuralStep,
-               steps.RDStep,
-               steps.MagStep,
+    evalSteps=[steps.RDStep,
+               steps.SleeveDesignStep,
+               steps.CoreLossStep,
                steps.ThermalStep]#TODO define steps
     #Create Evaluator
     evaluator=me.MachineEvaluator(evalSteps)
@@ -114,20 +124,16 @@ if __name__ == '__main__':
     des_file = path + r"\opti_designer.pkl"
     pop_file = path + r"\latest_pop.csv"
     dh=DataHandler(arch_file,des_file)
-    
-    #set evaluation bounds
-    bounds=([0,0,0],[1,1,1])
-    #set number of objectives
-    n_obj=3
+    # dh=DataHandler()
     
     #Create Machine Design Problem
     machDesProb=mo.DesignProblem(des,evaluator,design_space,dh)
     
     #Run Optimization
     opt=mo.DesignOptimizationMOEAD(machDesProb)
-    pop_size=500
+    pop_size=5000
     pop=opt.initial_pop(pop_size)
-    pop=opt.run_optimization(pop,4)
+    pop=opt.run_optimization(pop,10)
     archive=list(dh.load_from_archive())[-pop_size:]
     design_list=[None,]*pop_size
     full_results_list=[None,]*pop_size
@@ -145,12 +151,12 @@ if __name__ == '__main__':
     full_results_list=np.array(full_results_list)
     design_list=np.array(design_list)
     ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(objs_list) 
-    plt.scatter(-objs_list[ndf[0],0]*60/(2*np.pi),-objs_list[ndf[0],1])
+    plt.scatter(-objs_list[ndf[0],1],-objs_list[ndf[0],0])
     ax=plt.gca()
     ax.set_yscale('log')
     ax.set_xscale('log')
     ax.set_ylabel('Power [W]')
-    ax.set_xlabel('Speed [RPM]')
+    ax.set_xlabel('Power Density [RPM]')
     B_delta_list=[None,]*len(ndf[0])
     for ind,jnd in enumerate(ndf[0]):
         B_delta_list[ind]=full_results_list[jnd,2,1][0]

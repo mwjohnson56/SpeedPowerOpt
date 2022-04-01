@@ -25,9 +25,9 @@ class MagProblemDefinition(me.ProblemDefinition):
         magnet_mat=state.design.machine.magnet_mat
         core_mat=state.design.machine.core_mat
         
-        B_r=magnet_mat.B_r
-        mu_m=magnet_mat.mu_m
-        mu_core=core_mat.mu_core
+        B_r=magnet_mat['B_r']
+        mu_m=magnet_mat['mu_m']
+        mu_core=core_mat['mu_core']
         
         
         d_m=state.design.machine.d_m
