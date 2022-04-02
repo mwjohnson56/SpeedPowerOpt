@@ -96,7 +96,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
     """
     Q_motor=6
     p_motor=1
-    y_motor=1
+    y_motor=3
     
     def __init__(self,r_sh,r_ro,d_m,d_ag,l_st,d_yoke,w_tooth,l_tooth,
                  shaft_mat,magnet_mat,core_mat,coil_mat,sleeve_mat,ins_mat):
@@ -129,6 +129,8 @@ class Q6p1y1_SMP_Motor(me.Machine):
             raise mo.InvalidDesign(message='Saturated yoke feild')
         if self.B_th> self.core_mat['core_saturation_feild']:
             raise mo.InvalidDesign(message='Saturated tooth feild')
+        if self.d_m < .0001:
+            raise mo.InvalidDesign(message='Minnimum magnet thickness')
     
     #Inputed properties   
     @property
@@ -186,13 +188,13 @@ class Q6p1y1_SMP_Motor(me.Machine):
     #Design Constants
     @property
     def Q(self):
-        return 6
+        return self.Q_motor
     @property
     def y(self):
-        return 1
+        return self.y_motor
     @property
     def p(self):
-        return 1
+        return self.p_motor
     @property
     def alpha_q(self):
         return 2*np.pi/self.Q

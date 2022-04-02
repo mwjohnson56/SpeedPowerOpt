@@ -77,8 +77,8 @@ class CoreLossAnalyzer(me.Analyzer):
         p=problem.p
         Omega=problem.Omega
         K_h=problem.K_h
-        a=problem.a
-        b=problem.b
+        b=problem.a
+        a=problem.b
         K_e=problem.K_e
         rho=problem.rho
         k_stack=problem.k_stack
