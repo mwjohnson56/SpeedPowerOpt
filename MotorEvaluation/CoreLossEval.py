@@ -85,8 +85,8 @@ class CoreLossAnalyzer(me.Analyzer):
         B_sy=problem.B_sy
         B_tooth=problem.B_tooth
         f=p*Omega/(2*np.pi)
-        g_sy=(K_h*f**a*B_sy**b + K_e*(f*B_sy)**2)*k_stack
-        g_tooth=(K_h*f**a*B_tooth**b + K_e*(f*B_tooth)**2)*k_stack
+        g_sy=(K_h*(f**a)*(B_sy**b) + K_e*(f*B_sy)**2)*k_stack
+        g_tooth=(K_h*(f**a)*(B_tooth**b) + K_e*(f*B_tooth)**2)*k_stack
         results=[g_sy,g_tooth]
         return results
     

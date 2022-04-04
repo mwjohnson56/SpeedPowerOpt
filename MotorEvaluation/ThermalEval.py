@@ -36,7 +36,7 @@ class ThermalProblemDefinition(me.ProblemDefinition):
         k_fe=state.design.machine.core_mat['core_therm_conductivity']
         h=state.design.settings.h
         alpha_slot=state.design.machine.alpha_slot
-        T_coil=state.design.machine.coil_mat['Max_temp']
+        T_coil_max=state.design.machine.coil_mat['Max_temp']
         
         r_si=state.design.machine.r_si
         Q=state.design.machine.Q
@@ -44,9 +44,11 @@ class ThermalProblemDefinition(me.ProblemDefinition):
         k_fill=state.design.machine.coil_mat['k_fill']
         y=state.design.machine.y
         k_ov=state.design.machine.coil_mat['k_ov']
+        J_hat=state.design.machine.J_hat*(1000**2)
         
         problem=ThermalProblem(g_sy,g_th,w_st,l_st,l_tooth,alpha_q,r_so,r_sy,k_ins,
-                 w_ins,k_fe,h,alpha_slot,T_coil,r_si,Q,sigma,k_fill,y,k_ov)
+                 w_ins,k_fe,h,alpha_slot,T_coil_max,
+                 r_si,Q,sigma,k_fill,y,k_ov,J_hat)
         return problem
 
 class ThermalProblem():
@@ -56,7 +58,8 @@ class ThermalProblem():
         TODO
     """
     def __init__(self,g_sy,g_th,w_st,l_st,l_tooth,alpha_q,r_so,r_sy,k_ins,
-                 w_ins,k_fe,h,alpha_slot,T_coil,r_si,Q,sigma,k_fill,y,k_ov):
+                 w_ins,k_fe,h,alpha_slot,T_coil_max,
+                 r_si,Q,sigma,k_fill,y,k_ov,J_hat):
         """Creates problem class
         
         Args:
@@ -77,13 +80,14 @@ class ThermalProblem():
         self.k_fe=k_fe
         self.h=h
         self.alpha_slot=alpha_slot
-        self.T_coil=T_coil
+        self.T_coil_max=T_coil_max
         self.r_si=r_si
         self.Q=Q
         self.sigma=sigma
         self.k_fill=k_fill
         self.y=y
         self.k_ov=k_ov
+        self.J_hat=J_hat
     
 class ThermalAnalyzer(me.Analyzer):
     """"Class Analyzes the CubiodProblem  for volume and Surface Areas"""
@@ -113,22 +117,24 @@ class ThermalAnalyzer(me.Analyzer):
         k_fe=problem.k_fe
         h=problem.h
         alpha_slot=problem.alpha_slot
-        T_coil=problem.T_coil
+        T_coil_max=problem.T_coil_max
         r_si=problem.r_si
         Q=problem.Q
         sigma=problem.sigma
         k_fill=problem.k_fill
         y=problem.y
         k_ov=problem.k_ov
+        J_hat=problem.J_hat
         
-        l_turn=2*(l_st+y*alpha_q*(r_si+r_sy)*k_ov)
-        
+        l_turn=2*l_st+y*alpha_q*(r_si+r_sy)*k_ov
+        A_slot=np.pi*(r_sy**2-r_si**2)/Q -w_st*(r_sy-r_si)        
+
         
         # r_vect=np.linspace(r_sy,r_so,100)
         
         Q_tooth=g_th*w_st*l_st*l_tooth/2
         Q_sy=g_sy*alpha_q/2*(r_so**2-r_sy**2)*l_st
-        
+        Q_coil= (J_hat**2)*l_turn*k_fill*A_slot/(sigma*2)
         zeta=np.sqrt(2*k_ins/(w_st*w_ins*k_fe))
 
         
@@ -136,18 +142,15 @@ class ThermalAnalyzer(me.Analyzer):
         M_th=w_st*l_st/(2*zeta)*np.tanh(zeta*l_tooth)
         R_sy=1/(h*r_so*alpha_q*l_st)+np.log(r_so/r_sy)/(k_fe*alpha_q*l_st)
         V_sy=l_st*(alpha_q/2)*(r_so**2-r_sy**2)
-        M_sy=r_sy**2/(2*k_fe)*np.log(r_sy/r_so)+(r_so**2-r_sy**2)/(4*k_fe)+V_sy/(h*r_so*alpha_q*l_st)
+        M_sy=r_sy**2/(2*k_fe)*np.log(r_sy/r_so)+(r_so**2-r_sy**2)/(2*k_fe)+V_sy/(h*r_so*alpha_q*l_st)
         
         R_coil_st=w_ins*zeta/(k_ins*l_st*np.tanh(zeta*l_tooth))
         R_coil_sy=w_ins/(k_ins*r_sy*alpha_slot*l_st)
         R_coil=(2/R_coil_st + 1/R_coil_sy)**-1
-        
-        Q_coil=(T_coil -g_sy*M_sy - 2*Q_tooth*R_sy+M_th*g_th*R_coil-Q_tooth*R_coil)/(R_coil+R_sy)
-        if Q_coil<0:
-            raise mo.InvalidDesign(message='Negative Q_coil')
-        A_slot=np.pi*(r_sy**2-r_si**2)/Q -w_st*(r_sy-r_si)        
-        J_hat=np.sqrt(Q_coil*sigma*np.sqrt(2)/(l_turn*k_fill*A_slot))
-        return [J_hat,Q_coil,Q_sy,Q_tooth]
+        T_coil=Q_coil*(R_coil+R_sy) +g_sy*M_sy + 2*Q_tooth*R_sy - M_th*g_th*R_coil + Q_tooth*R_coil
+        if T_coil>T_coil_max:
+            raise mo.InvalidDesign(message='Coil temp to high')
+        return [T_coil,Q_coil,Q_sy,Q_tooth]
 
 
 class ThermalPostAnalyzer(me.PostAnalyzer):

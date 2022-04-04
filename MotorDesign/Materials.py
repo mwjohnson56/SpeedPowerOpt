@@ -76,10 +76,14 @@ M19Gauge29 = {
     'core_youngs_modulus'        : 185E9, # Pa
     'core_poission_ratio'        : .3,
     'core_material_cost'         : 17087, # $/m3
-    'core_ironloss_a'            : 1.58,
-    'core_ironloss_b'            : 1.17,
-    'core_ironloss_Kh'           : 78.94, # W/m3
-    'core_ironloss_Ke'           : 0.0372, # W/m3
+    #'core_ironloss_a'            : 1.58,
+    #'core_ironloss_b'            : 1.17,
+    #'core_ironloss_Kh'           : 78.94, # W/m3
+    #'core_ironloss_Ke'           : 0.0372, # W/m3
+    'core_ironloss_a'            : 1.8,# Field
+    'core_ironloss_b'            : 0.99,# Freq
+    'core_ironloss_Kh'           : 497.25, # W/m3
+    'core_ironloss_Ke'           : 0.3465, # W/m3
     'core_therm_conductivity'    : 28, # W/m-k
     'core_stacking_factor'       : 96, # percentage
     'core_saturation_feild'      : 1.6 #T

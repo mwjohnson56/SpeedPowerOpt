@@ -72,7 +72,7 @@ class RDAnalyzer(me.Analyzer):
         alpha_l=problem.alpha_l
         l_st=problem.l_st
 
-        omega_n=(4.7**2)*(r_sh/(alpha_l*l_st))*C_sh
+        omega_n=(4.7**2)*(r_sh/((alpha_l*l_st)**2))*C_sh/2
         if 1.2*problem.Omega>omega_n:
             raise mo.InvalidDesign(message='Critical Speed')
         else:
