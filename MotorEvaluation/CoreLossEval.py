@@ -31,8 +31,8 @@ class CoreLossProblemDefinition(me.ProblemDefinition):
         K_e=state.design.machine.core_mat['core_ironloss_Ke']
         rho=state.design.machine.core_mat['core_material_density']
         k_stack=state.design.machine.core_mat['core_stacking_factor']
-        B_sy=state.design.machine.B_sy
-        B_tooth=state.design.machine.B_th
+        B_sy=state.design.machine.B_sy_eff
+        B_tooth=state.design.machine.B_th_eff
         problem=CoreLossProblem(p,Omega,K_h,a,b,K_e,rho,k_stack,B_sy,B_tooth)
         return problem
 

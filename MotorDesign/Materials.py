@@ -67,7 +67,7 @@ Arnon5 = {
     'core_ironloss_Kh'           : 78.94, # W/m3
     'core_ironloss_Ke'           : 0.0372, # W/m3
     'core_therm_conductivity'    : 28, # W/m-k
-    'core_stacking_factor'       : 96 # percentage
+    'core_stacking_factor'       : .96 # percentage
     }
 
 M19Gauge29 = {
@@ -80,12 +80,13 @@ M19Gauge29 = {
     #'core_ironloss_b'            : 1.17,
     #'core_ironloss_Kh'           : 78.94, # W/m3
     #'core_ironloss_Ke'           : 0.0372, # W/m3
-    'core_ironloss_a'            : 1.8,# Field
-    'core_ironloss_b'            : 0.99,# Freq
-    'core_ironloss_Kh'           : 497.25, # W/m3
-    'core_ironloss_Ke'           : 0.3465, # W/m3
+    #Aron 5 co-eff
+    'core_ironloss_a'            : 1.918,# Field
+    'core_ironloss_b'            : 1.193,# Freq
+    'core_ironloss_Kh'           : 55.1565, # W/m3
+    'core_ironloss_Ke'           : 0.050949, # W/m3
     'core_therm_conductivity'    : 28, # W/m-k
-    'core_stacking_factor'       : 96, # percentage
+    'core_stacking_factor'       : .96, # 
     'core_saturation_feild'      : 1.6 #T
     }
 CoilCopper = {

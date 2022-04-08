@@ -49,6 +49,7 @@ class SPM_MotorArchitect(me.Architect):
         # l_tooth_norm=x[5]
         # J_hat=x[6]
         # d_ag=x[7]
+        #print(x)
         r_ro=x[0]
         d_m_norm=x[1]
         d_m=d_m_norm*r_ro
@@ -90,7 +91,8 @@ class SPM_SettingsHandler():
         self.Omega=Omega
         self.h=h
     def get_settings(self,x):
-        settings = Settings(self.h,self.Omega)
+        Omega=x[8]
+        settings = Settings(self.h,Omega)
         return settings
 
 class Settings:
@@ -102,7 +104,7 @@ class Settings:
         return self.Omega*60/(np.pi*2)
     @property
     def rotor_temp_rise(self):
-        return 0
+        return 50
         
 class Q6p1y1_SMP_Motor(me.Machine):
     """Class defines a Machine object 
@@ -110,8 +112,8 @@ class Q6p1y1_SMP_Motor(me.Machine):
     Attributes:
         TODO
     """
-    Q_motor=60
-    p_motor=10
+    Q_motor=6
+    p_motor=1
     y_motor=3
     
     def __init__(self,r_sh,r_ro,d_m,d_ag,l_st,d_yoke,w_tooth,l_tooth,J_hat,
@@ -142,14 +144,61 @@ class Q6p1y1_SMP_Motor(me.Machine):
         self.verify_design()
         
     def verify_design(self):
-        if self.B_sy> self.core_mat['core_saturation_feild']:
-            #print(self.B_arm)
-            raise mo.InvalidDesign(message='Saturated yoke feild')
-        if self.B_th> self.core_mat['core_saturation_feild']:
-            raise mo.InvalidDesign(message='Saturated tooth feild')
-        if self.d_m < .0001:
+        # if self.B_sy> self.core_mat['core_saturation_feild']:
+        #     print('B_sy: ',self.B_sy,
+        #           'B_arm: ',self.B_arm,
+        #           'A_hat: ',self.A_hat,
+        #           'B_delta: ',self.B_delta,
+        #           'B_total: ',self.B_ag_total)
+        #     raise mo.InvalidDesign(message='Saturated yoke feild')
+        # if self.B_th> self.core_mat['core_saturation_feild']:
+        #     #print(self.B_th,self.B_ag_total)
+        #     raise mo.InvalidDesign(message='Saturated tooth feild')
+        if self.d_m < .002: ## Minnimum Magnet Thickness
             raise mo.InvalidDesign(message='Minnimum magnet thickness')
-    
+        if self.l_tooth <.01:
+            raise mo.InvalidDesign(message='tooth too small')
+        if self.B_sy>self.core_mat['core_saturation_feild']:
+            B_ag_total_eff=self.core_mat['core_saturation_feild']*(2*self.p*(self.r_so-self.r_sy))/(np.pi*self.r_si)
+            if self.B_delta > B_ag_total_eff:
+                raise mo.InvalidDesign(message='Saturated yoke feild due to tooth')
+            B_arm_eff=np.sqrt(B_ag_total_eff**2-self.B_delta**2)
+            A_hat_eff=(self.p*(self.d_ag+self.d_m/self.magnet_mat['mu_r']))*B_arm_eff/(self.mu_0*self.r_si)
+            B_th_eff=B_ag_total_eff*self.r_si*self.alpha_q/(self.w_tooth)
+            #return A_hat_eff
+            if B_th_eff>self.core_mat['core_saturation_feild']:
+                B_ag_total_eff=self.core_mat['core_saturation_feild']*self.w_tooth/(self.r_si*self.alpha_q)
+                if self.B_delta > B_ag_total_eff:
+                    raise mo.InvalidDesign(message='Saturated yoke feild due to tooth')
+                B_arm_eff=np.sqrt(B_ag_total_eff**2-self.B_delta**2)
+                A_hat_eff=(self.p*(self.d_ag+self.d_m/self.magnet_mat['mu_r']))*B_arm_eff/(self.mu_0*self.r_si)
+                B_sy_eff=np.pi*B_ag_total_eff*self.r_si/(2*self.p*(self.r_so-self.r_sy))
+                self._B_sy_eff = B_sy_eff
+                B_th_eff=self.core_mat['core_saturation_feild']
+                self._B_th_eff = B_th_eff
+                self._A_hat_eff=A_hat_eff
+                return #
+            self._B_sy_eff = self.core_mat['core_saturation_feild']
+            self._B_th_eff = B_th_eff
+            self._A_hat_eff=A_hat_eff
+            return #
+        if self.B_th >self.core_mat['core_saturation_feild']:
+            B_ag_total_eff=self.core_mat['core_saturation_feild']*self.w_tooth/(self.r_si*self.alpha_q)
+            if self.B_delta > B_ag_total_eff:
+                raise mo.InvalidDesign(message='Saturated yoke feild due to tooth')
+            B_arm_eff=np.sqrt(B_ag_total_eff**2-self.B_delta**2)
+            A_hat_eff=(self.p*(self.d_ag+self.d_m/self.magnet_mat['mu_r']))*B_arm_eff/(self.mu_0*self.r_si)
+            B_sy_eff=np.pi*B_ag_total_eff*self.r_si/(2*self.p*(self.r_so-self.r_sy))
+            self._B_sy_eff = B_sy_eff
+            B_th_eff=self.core_mat['core_saturation_feild']
+            self._B_th_eff = B_th_eff
+            self._A_hat_eff=A_hat_eff
+            return #   
+        self._B_sy_eff = self.B_sy
+        self._B_th_eff = self.B_th
+        self._A_hat_eff = self.A_hat
+        return#
+        
     #Inputed properties   
     @property
     def r_sh(self):
@@ -242,7 +291,7 @@ class Q6p1y1_SMP_Motor(me.Machine):
         return self.d_m*self.magnet_mat['B_r']/(self.magnet_mat['mu_r']*self.d_ag+self.d_m)
     @property 
     def B_arm(self):
-        return (self.mu_0*self.A_hat*self.r_si)/(self.magnet_mat['mu_r']*self.d_ag+self.d_m)
+        return (self.mu_0*self.A_hat*self.r_si)/(self.p*(self.d_ag+self.d_m/self.magnet_mat['mu_r']))
     @property 
     def B_ag_total(self):
         return np.sqrt(self.B_delta**2 + self.B_arm**2)
@@ -252,6 +301,12 @@ class Q6p1y1_SMP_Motor(me.Machine):
     @property
     def B_sy(self):
         return np.pi*self.B_ag_total*self.r_si/(2*self.p*(self.r_so-self.r_sy))
+    @property
+    def B_sy_eff(self):
+        return self._B_sy_eff
+    @property
+    def B_th_eff(self):
+        return self._B_th_eff
     @property
     def B_th(self):
         return self.B_ag_total*self.r_si*self.alpha_q/(self.w_tooth)
@@ -282,6 +337,10 @@ class Q6p1y1_SMP_Motor(me.Machine):
         #A_hat=3*self.A_slot*J*(self.Q/3)*self.k_w*self.coil_mat['k_fill']/(np.pi*self.r_si)
         self._A_hat=A_hat
         return A_hat
+    @property
+    def A_hat_eff(self):
+        return self._A_hat_eff
+    
     def check_required_properties(self):
         """Checks for required input properties"""
         #TODO 
